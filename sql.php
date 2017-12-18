@@ -95,7 +95,7 @@ if ($task){
             $sql = "INSERT INTO `phonebook`.`db_phonebook` (`id`, `datetime`, `user_id_parent`, `name`, `description`, `photo`) VALUES (NULL, NOW(), '".$job['parent_id']."', '".$n."', '".$job['desc']."', '".$job['base64']."');";
             if ($con->query($sql) === TRUE) {
                 $out['msg']="телефонная книга успешно создана ".$n;
-                $out['msg1']="телефонная книга успешно создана ".$n;
+                $out['msg1']="";
             } else {
                 $out['msg']="Якась неведома ошибка";
                 $out['msg1']="Error: " . $sql . "<br>" . $conn->error;
@@ -117,14 +117,71 @@ if ($task){
             $out['sql'] = json_encode($myArray);
         }
     }
-	if ($task=='del_phonebook'){
-	
+	if ($task=='get_list_number_from_book'){
+        $q=$job['parent_id'];
+        $books_id=$job['phone_book_id'];
+        $sql="SELECT * FROM `phone_list` WHERE `parent_id_user` = '".$q."' AND `parent_phone_db_id` ='".$books_id."' ";
+        $result = mysqli_query($con,$sql);
+        $out->request = $sql;
+        if ( $result->num_rows >0 ) {
+            $out['msg']="";
+            while($row = $result->fetch_assoc()) {
+                $myArray[] = $row;
+            }
+            $out['sql'] = json_encode($myArray);
+        }else {
+            $out['msg']="гладь и пустота :D";
+        }
+        $out['msg1']=$sql;
 	}
 
-	if ($task=='add_to_phonebook'){
+
+	if ($task=='find_in_phone_book'){
+        $books_id=$job['phone_book_id'];
+        $find=$job['find'];
+        $q=$job['parent_id'];
+        $sql="SELECT * FROM `phone_list` WHERE `parent_id_user` = '".$q."' AND `parent_phone_db_id` ='".$books_id."'  and  ( name like '%".$find."%' or phone like '%".$find."%' ) ";
+        $result = mysqli_query($con,$sql);
+        $out->request = $sql;
+        if ( $result->num_rows >0 ) {
+            $out['msg']="";
+            while($row = $result->fetch_assoc()) {
+                $myArray[] = $row;
+            }
+            $out['sql'] = json_encode($myArray);
+        }else {
+            $out['msg']="не смог найти...";
+        }
+        $out['msg1']=$sql;
 	}
 
-	if ($task=='del_from_phonebook'){
+
+    if ($task=='add_to_phone_book'){
+        mysqli_select_db($con,"db_phonebook");
+        $q=$job['parent_id'];
+        $n=$job['books_id'];
+        $n_add=$job['name'];
+        $phone_add=$job['num_phone'];
+        $sql="SELECT * FROM  `phonebook`.`phone_list`  WHERE `parent_id_user` = '".$q."' AND `parent_phone_db_id` ='".$n."' and `name`= '".$n_add."'";
+        $result = mysqli_query($con,$sql);
+        $out->request = $sql;
+        if ( $result->num_rows >0 ) {
+            $out['msg']="Имя контакта уже существует: \"$n_add\" придумай другое имя..";
+        }
+        else {
+            $sql = "INSERT INTO `phonebook`.`phone_list` (`id`, `datetime`, `parent_id_user`, `parent_phone_db_id`, `name`, `phone`, `photo`) VALUES (NULL, NOW(), '".$q."', '".$n."', '".$n_add."', '".$phone_add."', '".$job['base64']."');";
+            if ($con->query($sql) === TRUE) {
+                $out['msg']="Контакт успешно создан ".$n;
+                $out['msg1']="";
+            } else {
+                $out['msg']="Якась неведома ошибка";
+                $out['msg1']="Error: " . $sql . "<br>" . $conn->error;
+
+            }
+        }
+    }
+
+    if ($task=='del_from_phonebook'){
 
 	}
 

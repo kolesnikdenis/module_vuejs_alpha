@@ -1,22 +1,5 @@
 
 const myMainContent = ( 'main-content', {
-    data: function(){
-        return {
-            hobby: "",
-
-        }
-
-    },
-    methods: {
-        changeStoreValue:  function (){
-            console.log("change");
-        }
-    },
-    watch: {
-        hobby: function (vel) {
-            console.log('te',vel);
-        }
-    },
     template: `<div>
   <nav class="navbar navbar-inverse navbar-static-top">
     <div class="container">
@@ -111,7 +94,7 @@ Vue.component('login-form', {
         status_login: { get(){ return this.$store.state.status_login } },
     }
 })
-Vue.component('create-book', {
+/*Vue.component('create-book', {
     data: function () {
         return {
             out: { phonebook: "", description: [], pathfile: "", base64: ""},
@@ -176,7 +159,7 @@ Vue.component('create-book', {
             console.log(this.out);
         },
     }
-})
+})*/
 Vue.component('registration-form', {
     data: function () {
         return {
@@ -331,8 +314,6 @@ Vue.component('user-info', {
          </div>
       </form>`,
     mounted: function () {
-        /*console.log("store:",this.$store.state.login );
-        console.log("load data login:"+this.login+" password:"+this.password);*/
       var url="https://kolesnikdenis.com/a-level/modulevue/sql.php";
       var send_post={task: 'get_info_user', job: { login: this.login, password: this.password}};
       this.$http.post(url, send_post, {emulateJSON:true}).then(function(callback){
@@ -594,7 +575,7 @@ Vue.component('phone-book', {
     template: `<div>
 <div id="myCarousel" class="carousel slide" data-ride="carousel">
 
-  <ol  class="carousel-indicators">
+  <ol class="carousel-indicators">
     <li v-for="(item, key, index) in gallery"  :data-slide-to="key" data-target="#myCarousel"  v-bind:class="[key ? '':'active']" ></li>
   </ol>
 
@@ -610,8 +591,6 @@ Vue.component('phone-book', {
       </div>
    </div>
   </div>
-  
-  <!-- Left and right controls -->
   <a class="left carousel-control" href="#myCarousel" data-slide="prev">
     <span class="glyphicon glyphicon-chevron-left"></span>
     <span class="sr-only">Previous</span>
@@ -622,9 +601,6 @@ Vue.component('phone-book', {
   </a>
 </div>
 </div>`,
-    methods: {
-
-    },
     computed: {
         status_login: { get(){ return this.$store.state.status_login; } },
         parent_id: { get(){ this.out.parent_id =this.$store.state.parent_id; return this.$store.state.parent_id; } },
@@ -634,23 +610,226 @@ Vue.component('phone-book', {
         var url="https://kolesnikdenis.com/a-level/modulevue/sql.php";
         var send_post={task: 'get_list_phone_book', job: { login: this.login, password: this.password, parent_id: this.parent_id}};
         this.$http.post(url, send_post, {emulateJSON:true}).then(function(callback){
-            var sql = JSON.parse(callback.body.sql);
-            if (sql){
-                for (key in sql ){
-                    this.gallery.push({link_to_db: "/books/"+sql[key].id, name_db: sql[key].name, datetime: sql[key].datetime, img: sql[key].photo });
+            if (callback.body.sql) {
+                var sql = JSON.parse(callback.body.sql);
+                if (sql) {
+                    for (key in sql) {
+                        this.gallery.push({
+                            link_to_db: "/books/" + sql[key].id,
+                            name_db: sql[key].name,
+                            datetime: sql[key].datetime,
+                            img: sql[key].photo
+                        });
+                    }
                 }
+
+                this.error = callback.body.msg1;
+                this.message = callback.body.msg1 + callback.body.msg;
             }
-
-            this.error = callback.body.msg1;
-            this.message = callback.body.msg1 + callback.body.msg;
-
         });
-
     },
 })
 
+Vue.component('get_data_from_phonebook', {
+    store: store,
+    data: function () {
+        return {
+            phone_db: [],
+            image: '',
+            error:'',
+            message:"",
+            findd: "",
+        }
+    },
+    template: `<div>
+<div v-if=status_login>
+<router-link class="btn btn-primary" to="/add_to_phone_book">добавить контакт в телефонную книгу</router-link>
+<div v-if=error>
 
+{{message}}<br>
+{{error}} 
+</div>
+<div v-if=!error>
 
+<div style="display: flex; justify-content:  stretch;"><p>поиск:</p><input type="text"  @input="find_name" v-model=findd class="form-control" id="pwd"></div>
+<div id="myCarousel" class="carousel slide" data-ride="carousel">
+
+  <ol class="carousel-indicators">
+    <li v-for="(item, key, index) in phone_db"  :data-slide-to="key" data-target="#myCarousel"  v-bind:class="[key ? '':'active']" ></li>
+  </ol>
+
+  <div class="carousel-inner" style=" height: 400px;">
+   <div  v-for="(ind, key, index) in phone_db" v-bind:class="[key ? 'item':'item active']">
+        <img  style="width: 100%; height: 100%; background: #b98181; filter: blur(5px); "     @error=imageLoadError width=480px :src="ind.img" :alt="ind.name">
+        
+        <div class="carousel-caption">
+        <div style="background: #9933334d; border-radius: 30px;">
+        <h3>Имя {{ind.name}}</h3>
+        <p>Телефон: {{ind.phone}}</p>
+        <p>Дата создания: {{ind.datetime}}</p>
+        </div>
+        
+        <p><router-link :to="ind.link_to_db">открыть контакт</router-link></p>
+      </div>
+   </div>
+  </div>
+  <a class="left carousel-control" href="#myCarousel" data-slide="prev">
+    <span class="glyphicon glyphicon-chevron-left"></span>
+    <span class="sr-only">Previous</span>
+  </a>
+  <a class="right carousel-control" href="#myCarousel" data-slide="next">
+    <span class="glyphicon glyphicon-chevron-right"></span>
+    <span class="sr-only">Next</span>
+  </a>
+</div>
+</div>
+</div>
+<div v-if=!status_login>вы не авторизированны</div>
+</div>
+</div>`,
+    methods: {
+        imageLoadError (e) {
+            console.log(e);
+            e.target.src="https://grist.files.wordpress.com/2015/11/blah-blah-c-shutterstock.jpg";
+        },
+        find_name  ({ type, target }) {
+            if (target.value.length >2 ) {
+                var url = "https://kolesnikdenis.com/a-level/modulevue/sql.php";
+                send_json = {parent_id: this.parent_id, phone_book_id: this.books_id, find: target.value};
+                this.phone_db.splice(0, this.phone_db.length);
+                var send_post = {task: 'find_in_phone_book', job: send_json};
+                this.$http.post(url, send_post, {emulateJSON: true}).then(function (callback) {
+                    if (callback.body.sql) {
+                        var sql = JSON.parse(callback.body.sql);
+                        if (sql) {
+                            for (key in sql) {
+                                this.phone_db.push({
+                                    link_to_db: "/books/show/" + sql[key].id,
+                                    phone: sql[key].phone,
+                                    id: sql[key].id,
+                                    name: sql[key].name,
+                                    datetime: sql[key].datetime,
+                                    img: sql[key].photo
+                                });
+                            }
+                        }
+
+                    }
+                    else {
+                        this.error = callback.body.msg1;
+                    }
+                    this.message = callback.body.msg;
+                });
+            }
+        },
+    },
+    computed: {
+
+        status_login: { get(){ return this.$store.state.status_login; } },
+        parent_id: { get(){ return this.$store.state.parent_id; } },
+        books_id: { get(){ return  this.$store.state.books_id; } },
+    },
+    mounted: function () {
+        var url="https://kolesnikdenis.com/a-level/modulevue/sql.php";
+        send_json = { parent_id: this.parent_id, phone_book_id: this.books_id};
+        var send_post={task: 'get_list_number_from_book', job: send_json};
+        this.$http.post(url, send_post, {emulateJSON:true}).then(function(callback){
+            if (callback.body.sql) {
+                var sql = JSON.parse(callback.body.sql);
+                if (sql) {
+                    for (key in sql) {
+                        this.phone_db.push({
+                            link_to_db: "/books/show/" + sql[key].id,
+                            phone: sql[key].phone,
+                            id: sql[key].id,
+                            name: sql[key].name,
+                            datetime: sql[key].datetime,
+                            img: sql[key].photo
+                        });
+                    }
+                }
+
+            }
+            else {
+                this.error = callback.body.msg1;
+            }
+            this.message = callback.body.msg;
+        });
+    },
+})
+Vue.component('add_contact_to_db', {
+    store: store,
+    data: function () {
+        return {
+            out: { name: "", num_phone: "", pathfile: "", base64: "" },
+            image: '',
+        }
+    },
+    computed: {
+        status_login: { get(){ return this.$store.state.status_login; } },
+        parent_id: { get(){ return this.$store.state.parent_id; } },
+        books_id: { get(){ return  this.$store.state.books_id; } },
+    },
+    template: `<div class="form-group has-success">
+  <input type="text" v-model=out.name class="form-control form-control-success" id="inputSuccess1">
+  <input type="text" v-model=out.num_phone  class="form-control form-control-success" id="inputSuccess1">
+
+<label v-if="!image"label class="btn btn-default btn-file">
+    фото контакта: <input type="file"  @change="onFileChange" style="display: none;">
+</label>
+
+<label v-if="image">
+    <img width=100px :src="image" />
+    <button @click="removeImage">удалить фото</button>
+</label>
+<button class="btn btn-lg btn-primary btn-block" @click=add_to_book type="submit">Добавить контакт</button><br>
+<br>{{out}}  
+</div>`,
+    methods: {
+        add_to_book: function (e) {
+            var url = "https://kolesnikdenis.com/a-level/modulevue/sql.php";
+            this.out['books_id']=  this.books_id;
+            this.out['parent_id']=  this.parent_id;
+            var send_post = {task: 'add_to_phone_book', job: this.out};
+            this.$http.post(url, send_post, {emulateJSON: true}).then(function (callback) {
+                if (callback.body.msg) {
+                    alert(callback.body.msg +"\n"+ callback.body.msg1);
+                    this.$router.go(-1);
+                }
+                this.error = callback.body.msg1;
+                this.message = callback.body.msg1 + callback.body.msg;
+            });
+        },
+        onFileChange(e) {
+            var files = e.target.files || e.dataTransfer.files;
+            console.log(files[0]);
+            this.out.pathfile = files[0].name;
+            if (!files.length)
+                return;
+            this.createImage(files[0]);
+
+        },
+        createImage(file) {
+            var image = new Image();
+            var reader = new FileReader();
+            var vm = this;
+            reader.onload = (e) => {
+                vm.image = e.target.result;
+                this.out.base64=reader.result;
+            };
+            reader.readAsDataURL(file);
+
+        },
+        removeImage: function (e) {
+            this.image = '';
+            this.out.base64="";
+            this.out.pathfile="";
+        },
+        check: function (e) {
+            alert(this.out);
+        },
+    }
+})
 const my_component = ( 'my-component', {
     store: store,
     data: function () {
@@ -679,12 +858,15 @@ const my_component = ( 'my-component', {
         <div slot="my_body" v-html="content">   </div> 
         <div slot="my_some">
        <!--{{page_get}}-->
+       
           <registration-form v-if="page_get=='reg'"></registration-form>
           <login-form v-if="page_get=='auth'"></login-form>
           <create-book v-if="page_get=='createbooks'"></create-book>
           <user-info v-if="page_get=='userinfo'"></user-info>
           <phone-book v-if="page_get=='phonebooks'"></phone-book>
           <logout-t v-if="page_get=='logout'"></logout-t>
+          <get_data_from_phonebook  v-if="page_get=='get_numbers_from_phonebook'"></get_data_from_phonebook>
+          <add_contact_to_db  v-if="page_get=='add_contact_to_db'"></add_contact_to_db>
         </div> 
       </main-content>
     </div>
@@ -697,12 +879,7 @@ const app = new Vue({
         'mycomponent': my_component,
      },
      router,
-     data: function () {
-        return {
-            localdata: JSON.parse( JSON.stringify(
-                this.$store.state ) )
-        }
-    },
+
 
 }).$mount('#app')
 

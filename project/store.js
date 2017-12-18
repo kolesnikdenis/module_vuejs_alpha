@@ -2,15 +2,16 @@ const store = new Vuex.Store({
     strict: true,
     state: {
         content_web: {
-            title: 'увы заголовок пуст',
-            content: "увы конетент пуст",
+            title: 'что будем делать?',
+            content: "выбери.... ",
             some: "content_web",
             page_get: "",
         },
         pages: {
+            null_page: {title:"", body: ""},/*
             userinfo: {title:"Информация о пользователе", body: ""},
             auth:  {title:`Авторизация`, body: ``},
-            reg:  {title:`Регистрация`, body: ``},
+            reg:  {title:`Регистрация`, body: ``},*/
             about: { title: "О Компании", body: `<div class="container">
 
       <div class="masthead">
@@ -49,8 +50,7 @@ const store = new Vuex.Store({
       </footer>
 
     </div>`},
-            phonebooks: {title: "список ваших телефонных кинг:", body: `
-                    <a href="#/createbooks" class="btn btn-primary"> ++ Создать телефонную книгу ++ </a><br>`},
+            phonebooks: {title: "список ваших телефонных кинг:", body: `<a href="#/createbooks" class="btn btn-primary"> ++ Создать телефонную книгу ++ </a><br>`},
             createbooks: {"title": "добавить телефонную книгу:", body: ``},
             contact: {"title": "Информация о нас:", body: ` <div class="site-wrapper-inner">
 
@@ -251,18 +251,22 @@ const store = new Vuex.Store({
         login: "",
         password: "",
         parent_id:"",
+        books_id: 0,
     },
 
     mutations: {
         updateData: function ( state, { value } ) {
             this.state.content_web.title=value;
         },
-        updateData_page: function ( state, { title, body, page_get, some } ) {
+        updateData_page: function ( state, { title, body, page_get, some, books_id } ) {
             var static_page = state.pages[page_get];
+            static_page=static_page?static_page:"null_page";
             this.state.content_web.page_get  = page_get;
             this.state.content_web.title=static_page.title;
             this.state.content_web.content=static_page.body;
-            this.state.content_web.some=some;
+            if (some) this.state.content_web.some=some;
+            if (books_id) this.state.books_id=books_id;
+            //console.log(title, body, page_get, some, this.state.parent_id,this.state.books_id  )
         },
         login_status: function (state, { status, login, password,parent_id}) {
             this.state.status_login = status;
@@ -271,7 +275,6 @@ const store = new Vuex.Store({
             this.state.parent_id = parent_id;
         },
         logout: function (state,{ title, body, page_get, some }) {
-            console.log(page_get)
             this.state.content_web.page_get  = page_get;
             this.state.status_login = false;
             this.state.login = "";

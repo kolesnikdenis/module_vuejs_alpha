@@ -1,13 +1,4 @@
 const UserProfile = {
-    props:   ['query'],
-    data: function () {
-        return {
-
-            todo: "reerere",
-        }
-    },
-    store: store,
-
     mounted: function () {
             this.$store.commit('updateData_page', {
                 title: "failed",
@@ -15,7 +6,6 @@ const UserProfile = {
                 page_get: "auth",
             });
     },
-
     template: `<form-login></form-login>`,
 }
 const reg = {
@@ -28,14 +18,7 @@ const reg = {
         });
     }
 }
-const Hello = {
-    template: `
-  <div>
-  <h1 class="hello">Hello {{$attrs.query}}</h1>
-    <h5 class="hello">attrs: {{ $attrs }}</h5>
-  </div>
-`
-}
+
 const userinfo = {
     store: store,
     mounted: function () {
@@ -53,29 +36,33 @@ const about = {
     store: store,
     mounted: function () {
         this.$store.commit('updateData_page', { title: "", body: "", page_get: "about" });
+    },template: `<div>через....</div>`
+}
+const add_contact_to_db= {
+    store: store,
+    mounted: function () {
+        this.$store.commit('updateData_page', { title: "", body: "", page_get: "add_contact_to_db" });
     },template: `<div></div>`
-
-
 }
 const books = {
     store: store,
-    props: {
-        ['id']: {
-            type: String,
-            required: true,
-            validator: function ( input_arr ) {
-                console.log( input_arr );
-                return true
+    mounted: function () {
+        if ( this.$route.params && this.$route.params.id ) {
+            var send_obj={ title: "123", body: "123", page_get: "get_numbers_from_phonebook", books_id: this.$route.params.id };
+            if ( this.$route.params.id !== "show" ) {
+                this.$store.commit('updateData_page', send_obj);
+                alert("вы хотите глянуть содержимое телефонной книги под id: "+this.$route.params.id);
+            }else {
+                alert("еще не придумал что тут выводить или кучу номеров если их добалвять масивом или еще и галлерею контакта добавить\r\n кстати вы смотрите контакт под номером:"+this.$route.params.action)
             }
+        } else {
+            alert("вы хотите глянуть книги ");
+            this.$store.commit('updateData_page', {title: "", body: "", page_get: "phonebooks"});
         }
     },
-    mounted: function () {
-        console.log(this.query);
-        this.$store.commit('updateData_page', { title: "", body: "", page_get: "phonebooks" });
-    },template: `<div><router-view></router-view></div>`
+    template: `<div> <router-view></router-view></div>`
+
 }
-
-
 const logout = {
     store: store,
     props:   ['query'],
@@ -83,8 +70,6 @@ const logout = {
             this.$store.commit('logout', { title: "", body: "", page_get: "logout" });
     }, template: `<div></div>`
 }
-
-
 const contact = {
     store: store,
     mounted: function () {
@@ -93,28 +78,7 @@ const contact = {
 
 
 }
-const UserPosts = {
-    props: {
-        ['user']: {
-            type: String,
-            required: true,
-            validator: function ( input_arr ) {
-                console.log( input_arr );
-                return true
-            }
-        }
-    },
-    data: function () {
-        return {
-            indeximg:['lavel'],
-            img_src: "reerere",
-        }
-    },
-    methods: function(){ console.log("methods");},
-    template: `<div>UserPosts: {{img_src}} -  {{indeximg}} {{user}} <br>
-  <router-view></router-view>
-  </div>`
-};
+
 
 const router = new VueRouter({
     routes:  [
@@ -123,22 +87,25 @@ const router = new VueRouter({
         { path: '/login', component: UserProfile },
         { path: '/userinfo', component: userinfo },
         {
-            path: '/books',  props:  ({ id: "Ирина:)"}), component: books,
+            path: '/books',  component:books,
             children: [{
                 path: ':id',
-                component: books,}]
+                component:  books,
+                children: [
+                    { path: ':action', component: books  }
+                    ,]
+            }]
         },
         { path: '/logout', component: logout },
         { path: '/about', component: about},
         { path: '/createbooks', component: createbooks},
+        { path: '/add_to_phone_book', component: add_contact_to_db,   },
         { path: '/auth', component: UserProfile, props:  ({ auth: false }),
             children: [ {
                 path: ':user',
-                component: UserProfile ,
+                component: UserProfile,
                 children: [
-                    { path: ':action', component: UserProfile,
-                        children: [ { path: 'dynamic', component: Hello,  props:  ({ query: "Ирина:)"}) },
-                            { path: ':lavel', component: UserPosts, sidebar: "id",props:true },]}
+                    { path: ':action', component: UserProfile  }
                     ,]
             },
             ]
